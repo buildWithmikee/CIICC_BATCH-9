@@ -6,8 +6,16 @@ abstract class abstractClass{
 
 }
 
+class B extends abstractClass{
+    void abstractMethod(){
+        System.out.println("B's implementation of abstractMethod.");
+    }
+}
+
 class C extends abstractClass{
-    // Your code goes here
+    void abstractMethod(){
+        System.out.println("C's implementation of abstractMethod.");
+    }
 }
 
 public class Task14 {
