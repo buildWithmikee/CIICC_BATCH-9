@@ -18,7 +18,15 @@ public static float divide(int a, int b){
 }
 
 public static void main(String[] args){
-    //Demonstrate the math operations here
+    int a = 100;
+    int b = 5;
+
+    System.out.println("Addition: " + add(a,b));
+    System.out.println("Subtraction: " + subtract(a,b));
+    System.out.println("Multiplication: " + multiply(a,b));
+    System.out.println("Division: " + divide(a,b));
+
+
  }
 }
 
