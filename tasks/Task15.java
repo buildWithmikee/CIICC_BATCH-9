@@ -56,7 +56,7 @@ class Rectangle extends AbstractShape {
 }
 
 // Main class
-public class Main {
+public class Task15 {
     public static void main(String[] args) {
 
         Circle circle = new Circle("Red", 5);
