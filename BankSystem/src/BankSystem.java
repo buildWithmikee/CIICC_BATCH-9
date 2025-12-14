@@ -1,5 +1,3 @@
-
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
@@ -12,13 +10,13 @@ public class BankSystem {
 
     public static void main(String[] args) {
 
-        // default data
-        accounts.put("user10", new Account("user10", "pass10", "Yixuan", 300.00));
+        // default accounts
+        accounts.put("user10", new Account("user10", "pass10", "Yixuan", 300));
         admins.put("admin", new Admin("admin", "admin123"));
 
         while (true) {
             System.out.println("\n==============================");
-            System.out.println("      BANK SYSTEM MAIN MENU");
+            System.out.println("       BANK SYSTEM");
             System.out.println("==============================");
             System.out.println("1. Admin Login");
             System.out.println("2. User Login");
@@ -32,7 +30,7 @@ public class BankSystem {
                 case 1 -> adminLogin();
                 case 2 -> userLogin();
                 case 3 -> {
-                    System.out.println("\nThank you for using the Bank System!");
+                    System.out.println("Thank you for using the Bank System!");
                     System.exit(0);
                 }
                 default -> System.out.println("❌ Invalid input.");
@@ -57,7 +55,7 @@ public class BankSystem {
         while (true) {
             System.out.println("\n------ ADMIN MENU ------");
             System.out.println("1. Create User");
-            System.out.println("2. View All Users");
+            System.out.println("2. View Users");
             System.out.println("3. Logout");
             System.out.print("Choose option: ");
 
@@ -67,6 +65,7 @@ public class BankSystem {
             if (choice == 1) {
                 System.out.print("Username: ");
                 String u = sc.nextLine();
+
                 if (accounts.containsKey(u)) {
                     System.out.println("❌ User already exists.");
                     continue;
@@ -85,7 +84,6 @@ public class BankSystem {
                 for (String key : accounts.keySet()) {
                     System.out.println("- " + key);
                 }
-
             } else {
                 break;
             }
@@ -102,7 +100,7 @@ public class BankSystem {
         Account acc = accounts.get(user);
 
         if (acc == null || !acc.login(user, pass)) {
-            System.out.println("❌ Invalid user login.");
+            System.out.println("❌ Invalid login.");
             return;
         }
 
@@ -133,4 +131,3 @@ public class BankSystem {
         }
     }
 }
-
