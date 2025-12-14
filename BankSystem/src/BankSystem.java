@@ -1,9 +1,8 @@
-import java.util.HashMap;     
-import java.util.Map;         
-import java.util.Iterator;    
-import java.util.Scanner;     
-import java.io.File;          
-import java.io.FileNotFoundException; 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Scanner;
+import java.io.File;
+import java.io.FileNotFoundException;
 
 public class BankSystem {
 
@@ -58,28 +57,42 @@ public class BankSystem {
 // ================= CSV Loader =================
 static void loadUsersFromCSV(String fileName) {
     try (Scanner fileScanner = new Scanner(new File(fileName))) {
+        int loaded = 0;
+
         while (fileScanner.hasNextLine()) {
-            String line = fileScanner.nextLine();
-            String[] parts = line.split(","); // username,password,fullName,balance
-            if (parts.length < 4) continue;   // skip invalid lines
+            String line = fileScanner.nextLine().trim();
+            if (line.isEmpty()) continue;
 
-            // Remove quotes and trim spaces for safety
-            String username = parts[0].replace("\"", "").trim();
-            String password = parts[1].replace("\"", "").trim();
-            String fullName = parts[2].replace("\"", "").trim();
-            String balStr = parts[3].replace("\"", "").replace("$", "").trim();
+            String[] parts = line.split(",");
 
-            double balance;
-            try {
-                balance = Double.parseDouble(balStr);
-            } catch (NumberFormatException e) {
-                System.out.println("❌ Could not parse balance for user: " + username + ", skipping...");
-                continue; // skip invalid balance
+            if (parts.length < 4) {
+                System.out.println("❌ Skipping invalid line: " + line);
+                continue;
             }
 
-            accounts.put(username, new Account(username, password, fullName, balance));
+            String username = parts[0].replaceAll("[^\\w]", "").trim();
+            String password = parts[1].trim();
+            String fullName = parts[2].trim();
+
+            // Clean balance for parsing (remove $ and commas)
+            String balStr = parts[3].replaceAll("[$,\\s]", "").trim();
+
+            if (balStr.isEmpty()) {
+                System.out.println("❌ Empty balance for user: " + username + ", skipping...");
+                continue;
+            }
+
+            try {
+                double balance = Double.parseDouble(balStr);
+                // Store the balance as double, display with $ later
+                accounts.put(username, new Account(username, password, fullName, balance));
+                loaded++;
+            } catch (NumberFormatException e) {
+                System.out.println("❌ Could not parse balance for user: " + username + ", skipping...");
+            }
         }
-        System.out.println("✅ Users loaded from CSV: " + accounts.size());
+
+        System.out.println("✅ Users loaded from CSV: " + loaded);
     } catch (FileNotFoundException e) {
         System.out.println("❌ CSV file not found: " + fileName);
     }
@@ -219,3 +232,52 @@ static void loadUsersFromCSV(String fileName) {
     }
 }
 
+// ========== ACCOUNT CLASS ==========
+class Account {
+    private String username;
+    private String password;
+    private String fullName;
+    private double balance;
+
+    public Account(String username, String password, String fullName, double balance) {
+        this.username = username;
+        this.password = password;
+        this.fullName = fullName;
+        this.balance = balance;
+    }
+
+    public boolean login(String user, String pass) {
+        return this.username.equals(user) && this.password.equals(pass);
+    }
+
+    public double getBalance() { return balance; }
+
+    public void deposit(double amt) {
+        balance += amt;
+        System.out.println("✅ Deposited: " + amt + " | New balance: " + balance);
+    }
+
+    public void withdraw(double amt) {
+        if (amt > balance) {
+            System.out.println("❌ Insufficient balance.");
+        } else {
+            balance -= amt;
+            System.out.println("✅ Withdrawn: " + amt + " | New balance: " + balance);
+        }
+    }
+}
+
+// ========== ADMIN CLASS ==========
+class Admin {
+    private String username;
+    private String password;
+
+    public Admin(String username, String password) {
+        this.username = username;
+        this.password = password;
+    }
+
+    public boolean login(String user, String pass) {
+        return this.username.equals(user) && this.password.equals(pass);
+    }
+}
