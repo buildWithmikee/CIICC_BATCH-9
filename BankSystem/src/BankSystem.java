@@ -3,6 +3,9 @@ import java.util.Map;
 import java.util.Scanner;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 
 public class BankSystem {
 
@@ -49,6 +52,25 @@ public class BankSystem {
                         System.out.println("❌ Username already exists.");
                         break;
                     }
+
+                    // Prompt for password
+                    System.out.print("Enter password: ");
+                    String newPassword = sc.nextLine();
+
+                    // Prompt for full name
+                    System.out.print("Enter full name: ");
+                    String fullName = sc.nextLine();
+
+    // Create new account
+    Account newAcc = new Account(newUsername, newPassword, fullName, 0);
+    accounts.put(newUsername, newAcc);
+
+    // Save to CSV so it persists
+    saveAccountToCSV(newAcc, "users.csv");
+
+    System.out.println("✅ Account created successfully! You can now login.");
+    break;
+
                 case 3:
                     System.out.println("Thank you for using Cointrix!");
                     System.exit(0);
@@ -56,6 +78,18 @@ public class BankSystem {
                 default:
                     System.out.println("❌ Invalid input.");
             }
+        }
+    }
+
+    // ================= Save New Account =================
+    static void saveAccountToCSV(Account acc, String fileName) {
+        try (FileWriter fw = new FileWriter(fileName, true);
+             PrintWriter pw = new PrintWriter(fw)) {
+            // Format: username,password,fullName,balance
+            pw.println(acc.getUsername() + "," + acc.getPassword() + "," + acc.getFullName() + "," + acc.getBalance());
+            System.out.println("✅ Account saved to file.");
+        } catch (IOException e) {
+            System.out.println("❌ Error saving account: " + e.getMessage());
         }
     }
 

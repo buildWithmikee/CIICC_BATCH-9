@@ -37,7 +37,18 @@ public class Account {
         System.out.println("/ Withdrawal successful.");
     }
 
+    // ======= ADD THESE GETTERS =======
+    public String getUsername() {
+        return username;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
     public String getFullName() {
         return fullName;
     }
+    // ================================
 }
+
