@@ -1,8 +1,9 @@
-package BankSystem.src;
-
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Scanner;
+import java.util.HashMap;     
+import java.util.Map;         
+import java.util.Iterator;    
+import java.util.Scanner;     
+import java.io.File;          
+import java.io.FileNotFoundException; 
 
 public class BankSystem {
 
@@ -12,8 +13,12 @@ public class BankSystem {
 
     public static void main(String[] args) {
 
-        accounts.put("user10", new Account("user10", "pass10", "Yixuan", 300));
+        // Load users from CSV at startup
+        loadUsersFromCSV("users.csv");
+
+        // Default admin/user
         admins.put("admin", new Admin("admin", "admin123"));
+        accounts.putIfAbsent("user10", new Account("user10", "pass10", "Yixuan", 300));
 
         while (true) {
             System.out.println("\n==============================");
@@ -24,8 +29,14 @@ public class BankSystem {
             System.out.println("3. Exit");
             System.out.print("Choose option: ");
 
-            int choice = sc.nextInt();
-            sc.nextLine();
+            String input = sc.nextLine();
+            int choice;
+            try {
+                choice = Integer.parseInt(input);
+            } catch (NumberFormatException e) {
+                System.out.println("❌ Invalid input. Enter a number.");
+                continue;
+            }
 
             switch (choice) {
                 case 1:
@@ -37,11 +48,43 @@ public class BankSystem {
                 case 3:
                     System.out.println("Thank you for using the Bank System!");
                     System.exit(0);
+                    break;
                 default:
                     System.out.println("❌ Invalid input.");
             }
         }
     }
+
+// ================= CSV Loader =================
+static void loadUsersFromCSV(String fileName) {
+    try (Scanner fileScanner = new Scanner(new File(fileName))) {
+        while (fileScanner.hasNextLine()) {
+            String line = fileScanner.nextLine();
+            String[] parts = line.split(","); // username,password,fullName,balance
+            if (parts.length < 4) continue;   // skip invalid lines
+
+            // Remove quotes and trim spaces for safety
+            String username = parts[0].replace("\"", "").trim();
+            String password = parts[1].replace("\"", "").trim();
+            String fullName = parts[2].replace("\"", "").trim();
+            String balStr = parts[3].replace("\"", "").replace("$", "").trim();
+
+            double balance;
+            try {
+                balance = Double.parseDouble(balStr);
+            } catch (NumberFormatException e) {
+                System.out.println("❌ Could not parse balance for user: " + username + ", skipping...");
+                continue; // skip invalid balance
+            }
+
+            accounts.put(username, new Account(username, password, fullName, balance));
+        }
+        System.out.println("✅ Users loaded from CSV: " + accounts.size());
+    } catch (FileNotFoundException e) {
+        System.out.println("❌ CSV file not found: " + fileName);
+    }
+}
+
 
     // ================= ADMIN =================
     static void adminLogin() {
@@ -64,24 +107,27 @@ public class BankSystem {
             System.out.println("3. Logout");
             System.out.print("Choose option: ");
 
-            int choice = sc.nextInt();
-            sc.nextLine();
+            String input = sc.nextLine();
+            int choice;
+            try {
+                choice = Integer.parseInt(input);
+            } catch (NumberFormatException e) {
+                System.out.println("❌ Invalid input. Enter a number.");
+                continue;
+            }
 
             switch (choice) {
                 case 1:
                     System.out.print("Username: ");
                     String u = sc.nextLine();
-
                     if (accounts.containsKey(u)) {
                         System.out.println("❌ User already exists.");
                         break;
                     }
-
                     System.out.print("Password: ");
                     String p = sc.nextLine();
                     System.out.print("Full Name: ");
                     String n = sc.nextLine();
-
                     accounts.put(u, new Account(u, p, n, 0));
                     System.out.println("✅ User created successfully.");
                     break;
@@ -124,7 +170,14 @@ public class BankSystem {
             System.out.println("4. Logout");
             System.out.print("Choose option: ");
 
-            int choice = sc.nextInt();
+            String input = sc.nextLine();
+            int choice;
+            try {
+                choice = Integer.parseInt(input);
+            } catch (NumberFormatException e) {
+                System.out.println("❌ Invalid input. Enter a number.");
+                continue;
+            }
 
             switch (choice) {
                 case 1:
@@ -132,11 +185,13 @@ public class BankSystem {
                     break;
                 case 2:
                     System.out.print("Enter amount: ");
-                    acc.deposit(sc.nextDouble());
+                    double depositAmt = getPositiveDouble();
+                    acc.deposit(depositAmt);
                     break;
                 case 3:
                     System.out.print("Enter amount: ");
-                    acc.withdraw(sc.nextDouble());
+                    double withdrawAmt = getPositiveDouble();
+                    acc.withdraw(withdrawAmt);
                     break;
                 case 4:
                     return;
@@ -145,4 +200,22 @@ public class BankSystem {
             }
         }
     }
+
+    // Helper method for safe double input
+    static double getPositiveDouble() {
+        while (true) {
+            String input = sc.nextLine();
+            try {
+                double value = Double.parseDouble(input);
+                if (value <= 0) {
+                    System.out.print("❌ Enter a positive amount: ");
+                    continue;
+                }
+                return value;
+            } catch (NumberFormatException e) {
+                System.out.print("❌ Invalid number. Try again: ");
+            }
+        }
+    }
 }
+

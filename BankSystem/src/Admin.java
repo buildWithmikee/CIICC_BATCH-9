@@ -1,4 +1,3 @@
-package BankSystem.src;
 
 public class Admin {
     private String username;

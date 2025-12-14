@@ -1,5 +1,3 @@
-package BankSystem.src;
-
 public class Account {
     private String username;
     private String password;
