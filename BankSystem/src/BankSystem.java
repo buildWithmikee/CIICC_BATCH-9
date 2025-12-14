@@ -27,13 +27,17 @@ public class BankSystem {
             sc.nextLine();
 
             switch (choice) {
-                case 1 -> adminLogin();
-                case 2 -> userLogin();
-                case 3 -> {
+                case 1:
+                    adminLogin();
+                    break;
+                case 2:
+                    userLogin();
+                    break;
+                case 3:
                     System.out.println("Thank you for using the Bank System!");
                     System.exit(0);
-                }
-                default -> System.out.println("❌ Invalid input.");
+                default:
+                    System.out.println("❌ Invalid input.");
             }
         }
     }
@@ -62,30 +66,34 @@ public class BankSystem {
             int choice = sc.nextInt();
             sc.nextLine();
 
-            if (choice == 1) {
-                System.out.print("Username: ");
-                String u = sc.nextLine();
+            switch (choice) {
+                case 1:
+                    System.out.print("Username: ");
+                    String u = sc.nextLine();
 
-                if (accounts.containsKey(u)) {
-                    System.out.println("❌ User already exists.");
-                    continue;
-                }
+                    if (accounts.containsKey(u)) {
+                        System.out.println("❌ User already exists.");
+                        break;
+                    }
 
-                System.out.print("Password: ");
-                String p = sc.nextLine();
-                System.out.print("Full Name: ");
-                String n = sc.nextLine();
+                    System.out.print("Password: ");
+                    String p = sc.nextLine();
+                    System.out.print("Full Name: ");
+                    String n = sc.nextLine();
 
-                accounts.put(u, new Account(u, p, n, 0));
-                System.out.println("✅ User created successfully.");
+                    accounts.put(u, new Account(u, p, n, 0));
+                    System.out.println("✅ User created successfully.");
+                    break;
 
-            } else if (choice == 2) {
-                System.out.println("\n--- USER LIST ---");
-                for (String key : accounts.keySet()) {
-                    System.out.println("- " + key);
-                }
-            } else {
-                break;
+                case 2:
+                    System.out.println("\n--- USER LIST ---");
+                    for (String key : accounts.keySet()) {
+                        System.out.println("- " + key);
+                    }
+                    break;
+
+                default:
+                    return;
             }
         }
     }
@@ -115,19 +123,7 @@ public class BankSystem {
             int choice = sc.nextInt();
 
             switch (choice) {
-                case 1 -> System.out.println("💰 Balance: " + acc.getBalance());
-                case 2 -> {
-                    System.out.print("Enter amount: ");
-                    acc.deposit(sc.nextDouble());
-                }
-                case 3 -> {
-                    System.out.print("Enter amount: ");
-                    acc.withdraw(sc.nextDouble());
-                }
-                default -> {
-                    return;
-                }
-            }
-        }
-    }
-}
+                case 1:
+                    System.out.println("💰 Balance: " + acc.getBalance());
+                    break;
+                case 2:
