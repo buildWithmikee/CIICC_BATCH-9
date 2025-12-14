@@ -1,3 +1,5 @@
+package BankSystem.src;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
@@ -10,7 +12,6 @@ public class BankSystem {
 
     public static void main(String[] args) {
 
-        // default accounts
         accounts.put("user10", new Account("user10", "pass10", "Yixuan", 300));
         admins.put("admin", new Admin("admin", "admin123"));
 
@@ -92,8 +93,11 @@ public class BankSystem {
                     }
                     break;
 
-                default:
+                case 3:
                     return;
+
+                default:
+                    System.out.println("❌ Invalid choice.");
             }
         }
     }
@@ -127,3 +131,18 @@ public class BankSystem {
                     System.out.println("💰 Balance: " + acc.getBalance());
                     break;
                 case 2:
+                    System.out.print("Enter amount: ");
+                    acc.deposit(sc.nextDouble());
+                    break;
+                case 3:
+                    System.out.print("Enter amount: ");
+                    acc.withdraw(sc.nextDouble());
+                    break;
+                case 4:
+                    return;
+                default:
+                    System.out.println("❌ Invalid choice.");
+            }
+        }
+    }
+}
