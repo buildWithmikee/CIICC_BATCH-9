@@ -20,12 +20,12 @@ public class BankSystem {
         accounts.putIfAbsent("user10", new Account("user10", "pass10", "Yixuan", 300));
 
         while (true) {
-            System.out.println("\n==============================");
-            System.out.println("       BANK SYSTEM");
-            System.out.println("==============================");
-            System.out.println("1. Admin Login");
-            System.out.println("2. User Login");
-            System.out.println("3. Exit");
+            System.out.println("\n==================================");
+            System.out.println("             COINTRIX");
+            System.out.println("   Powering Your Digital Assets");
+            System.out.println("==================================");
+            System.out.println("1. Sign In Account");
+            System.out.println("2. Register Account");
             System.out.print("Choose option: ");
 
             String input = sc.nextLine();
@@ -39,13 +39,18 @@ public class BankSystem {
 
             switch (choice) {
                 case 1:
-                    adminLogin();
-                    break;
-                case 2:
                     userLogin();
                     break;
+                case 2:
+                    System.out.print("Choose a username: ");
+                    String newUsername = sc.nextLine();
+
+                    if(accounts.containsKey(newUsername)){
+                        System.out.println("❌ Username already exists.");
+                        break;
+                    }
                 case 3:
-                    System.out.println("Thank you for using the Bank System!");
+                    System.out.println("Thank you for using Cointrix!");
                     System.exit(0);
                     break;
                 default:
