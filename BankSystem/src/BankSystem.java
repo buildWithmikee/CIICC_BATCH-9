@@ -29,6 +29,7 @@ public class BankSystem {
             System.out.println("==================================");
             System.out.println("1. Sign In Account");
             System.out.println("2. Register Account");
+            System.out.println("3. Exit");
             System.out.print("Choose option: ");
 
             String input = sc.nextLine();
@@ -289,7 +290,9 @@ class Account {
         return this.username.equals(user) && this.password.equals(pass);
     }
 
-    public double getBalance() { return balance; }
+    public double getBalance() {
+        return balance;
+    }
 
     public void deposit(double amt) {
         balance += amt;
@@ -304,7 +307,22 @@ class Account {
             System.out.println("✅ Withdrawn: " + amt + " | New balance: " + balance);
         }
     }
+
+    // ======= ADD THESE GETTERS =======
+    public String getUsername() {
+        return username;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public String getFullName() {
+        return fullName;
+    }
+    // ================================
 }
+
 
 // ========== ADMIN CLASS ==========
 class Admin {
