@@ -1,4 +1,5 @@
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Scanner;
 import java.io.File;
@@ -6,17 +7,25 @@ import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.text.NumberFormat;
+import BankSystem.Account;
+import BankSystem.repository.UserRepository;
+import BankSystem.repository.CsvUserRepository;
+
 
 public class BankSystem {
 
     static Scanner sc = new Scanner(System.in);
     static Map<String, Account> accounts = new HashMap<>();
     static Map<String, Admin> admins = new HashMap<>();
+    
+    // CSV file path in project root
+    static final String CSV_FILE = "users.csv";
 
     public static void main(String[] args) {
 
         // Load users from CSV at startup
-        loadUsersFromCSV("users.csv");
+        loadUsersFromCSV(CSV_FILE);
 
         // Default admin/user
         admins.put("admin", new Admin("admin", "admin123"));
@@ -46,32 +55,8 @@ public class BankSystem {
                     userLogin();
                     break;
                 case 2:
-                    System.out.print("Choose a username: ");
-                    String newUsername = sc.nextLine();
-
-                    if(accounts.containsKey(newUsername)){
-                        System.out.println("❌ Username already exists.");
-                        break;
-                    }
-
-                    // Prompt for password
-                    System.out.print("Enter password: ");
-                    String newPassword = sc.nextLine();
-
-                    // Prompt for full name
-                    System.out.print("Enter full name: ");
-                    String fullName = sc.nextLine();
-
-    // Create new account
-    Account newAcc = new Account(newUsername, newPassword, fullName, 0);
-    accounts.put(newUsername, newAcc);
-
-    // Save to CSV so it persists
-    saveAccountToCSV(newAcc, "users.csv");
-
-    System.out.println("✅ Account created successfully! You can now login.");
-    break;
-
+                    registerAccount();
+                    break;
                 case 3:
                     System.out.println("Thank you for using Cointrix!");
                     System.exit(0);
@@ -82,126 +67,120 @@ public class BankSystem {
         }
     }
 
-    // ================= Save New Account =================
-    static void saveAccountToCSV(Account acc, String fileName) {
-        try (FileWriter fw = new FileWriter(fileName, true);
-             PrintWriter pw = new PrintWriter(fw)) {
-            // Format: username,password,fullName,balance
-            pw.println(acc.getUsername() + "," + acc.getPassword() + "," + acc.getFullName() + "," + acc.getBalance());
-            System.out.println("✅ Account saved to file.");
+// ================= ENSURE CSV EXISTS =================
+static void ensureCSVExists() {
+    File file = new File(CSV_FILE);
+    if (!file.exists()) {
+        try (PrintWriter pw = new PrintWriter(new FileWriter(file))) {
+            pw.println("first_name,last_name,email,balance");
+            System.out.println("✅ Created new CSV with header: " + file.getAbsolutePath());
         } catch (IOException e) {
-            System.out.println("❌ Error saving account: " + e.getMessage());
+            System.out.println("❌ Error creating CSV: " + e.getMessage());
         }
     }
+}
 
-// ================= CSV Loader =================
+// ================= REGISTER ACCOUNT =================
+static void registerAccount() {
+    System.out.print("Choose a username/email: ");
+    String newUsername = sc.nextLine().trim();
+
+    if (accounts.containsKey(newUsername)) {
+        System.out.println("❌ Username already exists.");
+        return;
+    }
+
+    System.out.print("Enter password: ");
+    String newPassword = sc.nextLine().trim();
+
+    System.out.print("Enter full name: ");
+    String fullName = sc.nextLine().trim();
+
+    Account newAcc = new Account(newUsername, newPassword, fullName, 0);
+    accounts.put(newUsername, newAcc);
+
+    saveAccountToCSV(newAcc);
+
+    System.out.println("✅ Account created successfully! You can now login.");
+}
+
+// ================= SAVE NEW ACCOUNT =================
+static void saveAccountToCSV(Account acc) {
+    File file = new File(CSV_FILE);
+    System.out.println("Saving account to: " + file.getAbsolutePath());
+
+    try (FileWriter fw = new FileWriter(file, true);
+         PrintWriter pw = new PrintWriter(fw)) {
+
+        // Split full name into first & last
+        String[] nameParts = acc.getFullName().trim().split(" ", 2);
+        String firstName = nameParts[0];
+        String lastName = nameParts.length > 1 ? nameParts[1] : "";
+
+        // Format balance as "$37,063.78"
+        NumberFormat nf = NumberFormat.getCurrencyInstance(Locale.US);
+        String formattedBalance = nf.format(acc.getBalance());
+
+        // CSV format: first_name,last_name,email,balance
+        pw.println(firstName + "," +
+                   lastName + "," +
+                   acc.getUsername() + "," +
+                   "\"" + formattedBalance + "\"");
+
+        System.out.println("✅ Account appended to CSV.");
+
+    } catch (IOException e) {
+        System.out.println("❌ Error saving account: " + e.getMessage());
+    }
+}
+
+// ================= CSV LOADER =================
 static void loadUsersFromCSV(String fileName) {
-    try (Scanner fileScanner = new Scanner(new File(fileName))) {
+    File file = new File(fileName);
+    if (!file.exists()) {
+        System.out.println("No existing CSV found at: " + file.getAbsolutePath());
+        return;
+    }
+
+    try (Scanner fileScanner = new Scanner(file)) {
         int loaded = 0;
+
+        // Skip header
+        if (fileScanner.hasNextLine()) fileScanner.nextLine();
 
         while (fileScanner.hasNextLine()) {
             String line = fileScanner.nextLine().trim();
             if (line.isEmpty()) continue;
 
             String[] parts = line.split(",");
+            if (parts.length < 4) continue;
 
-            if (parts.length < 4) {
-                System.out.println("❌ Skipping invalid line: " + line);
-                continue;
-            }
+            String firstName = parts[0].trim();
+            String lastName = parts[1].trim();
+            String email = parts[2].trim();
 
-            String username = parts[0].replaceAll("[^\\w]", "").trim();
-            String password = parts[1].trim();
-            String fullName = parts[2].trim();
+            // Remove "$", ",", quotes
+            String balStr = parts[3].replace("\"", "")
+                                     .replace("$", "")
+                                     .replace(",", "")
+                                     .trim();
 
-            // Clean balance for parsing (remove $ and commas)
-            String balStr = parts[3].replaceAll("[$,\\s]", "").trim();
+            double balance = Double.parseDouble(balStr);
+            String fullName = firstName + " " + lastName;
 
-            if (balStr.isEmpty()) {
-                System.out.println("❌ Empty balance for user: " + username + ", skipping...");
-                continue;
-            }
-
-            try {
-                double balance = Double.parseDouble(balStr);
-                // Store the balance as double, display with $ later
-                accounts.put(username, new Account(username, password, fullName, balance));
-                loaded++;
-            } catch (NumberFormatException e) {
-                System.out.println("❌ Could not parse balance for user: " + username + ", skipping...");
-            }
+            accounts.put(email, new Account(email, "N/A", fullName, balance));
+            loaded++;
         }
 
-        System.out.println("✅ Users loaded from CSV: " + loaded);
-    } catch (FileNotFoundException e) {
-        System.out.println("❌ CSV file not found: " + fileName);
+        System.out.println("✅ Users loaded from currentusers.csv: " + loaded);
+
+    } catch (Exception e) {
+        System.out.println("❌ Error loading CSV: " + e.getMessage());
     }
 }
 
 
-    // ================= ADMIN =================
-    static void adminLogin() {
-        System.out.print("\nAdmin Username: ");
-        String user = sc.nextLine();
-        System.out.print("Admin Password: ");
-        String pass = sc.nextLine();
-
-        Admin admin = admins.get(user);
-
-        if (admin == null || !admin.login(user, pass)) {
-            System.out.println("❌ Wrong admin credentials.");
-            return;
-        }
-
-        while (true) {
-            System.out.println("\n------ ADMIN MENU ------");
-            System.out.println("1. Create User");
-            System.out.println("2. View Users");
-            System.out.println("3. Logout");
-            System.out.print("Choose option: ");
-
-            String input = sc.nextLine();
-            int choice;
-            try {
-                choice = Integer.parseInt(input);
-            } catch (NumberFormatException e) {
-                System.out.println("❌ Invalid input. Enter a number.");
-                continue;
-            }
-
-            switch (choice) {
-                case 1:
-                    System.out.print("Username: ");
-                    String u = sc.nextLine();
-                    if (accounts.containsKey(u)) {
-                        System.out.println("❌ User already exists.");
-                        break;
-                    }
-                    System.out.print("Password: ");
-                    String p = sc.nextLine();
-                    System.out.print("Full Name: ");
-                    String n = sc.nextLine();
-                    accounts.put(u, new Account(u, p, n, 0));
-                    System.out.println("✅ User created successfully.");
-                    break;
-
-                case 2:
-                    System.out.println("\n--- USER LIST ---");
-                    for (String key : accounts.keySet()) {
-                        System.out.println("- " + key);
-                    }
-                    break;
-
-                case 3:
-                    return;
-
-                default:
-                    System.out.println("❌ Invalid choice.");
-            }
-        }
-    }
-
-    // ================= USER =================
+    // ================= USER LOGIN =================
     static void userLogin() {
         System.out.print("\nUsername: ");
         String user = sc.nextLine();
@@ -209,17 +188,16 @@ static void loadUsersFromCSV(String fileName) {
         String pass = sc.nextLine();
 
         Account acc = accounts.get(user);
-
         if (acc == null || !acc.login(user, pass)) {
             System.out.println("❌ Invalid login.");
             return;
         }
 
         while (true) {
-            System.out.println("\n------ USER MENU ------");
+            System.out.println("\n=========== USER MENU ===========");
             System.out.println("1. View Balance");
             System.out.println("2. Deposit");
-            System.out.println("3. Withdraw");
+            System.out.println("3. Transfer");
             System.out.println("4. Logout");
             System.out.print("Choose option: ");
 
@@ -240,11 +218,13 @@ static void loadUsersFromCSV(String fileName) {
                     System.out.print("Enter amount: ");
                     double depositAmt = getPositiveDouble();
                     acc.deposit(depositAmt);
+                    saveAllAccountsToCSV(); // persist balance change
                     break;
                 case 3:
                     System.out.print("Enter amount: ");
                     double withdrawAmt = getPositiveDouble();
                     acc.withdraw(withdrawAmt);
+                    saveAllAccountsToCSV(); // persist balance change
                     break;
                 case 4:
                     return;
@@ -254,7 +234,32 @@ static void loadUsersFromCSV(String fileName) {
         }
     }
 
-    // Helper method for safe double input
+    // Save all accounts to CSV (overwrite)
+static void saveNewAccountToCSV(Account acc) {
+    try (PrintWriter pw = new PrintWriter(new FileWriter(CSV_FILE, true))) {
+
+        // Split full name into first and last
+        String[] nameParts = acc.getFullName().split(" ", 2);
+        String firstName = nameParts[0];
+        String lastName = nameParts.length > 1 ? nameParts[1] : "";
+
+        // Format balance like "$37,063.78"
+        NumberFormat nf = NumberFormat.getCurrencyInstance(Locale.US);
+        String formattedBalance = nf.format(acc.getBalance());
+
+        pw.println(
+            firstName + "," +
+            lastName + "," +
+            acc.getUsername() + "," +
+            "\"" + formattedBalance + "\""
+        );
+
+    } catch (IOException e) {
+        System.out.println("❌ Error saving new account: " + e.getMessage());
+    }
+}
+
+    // Helper for double input
     static double getPositiveDouble() {
         while (true) {
             String input = sc.nextLine();
@@ -290,9 +295,10 @@ class Account {
         return this.username.equals(user) && this.password.equals(pass);
     }
 
-    public double getBalance() {
-        return balance;
-    }
+    public double getBalance() { return balance; }
+    public String getUsername() { return username; }
+    public String getPassword() { return password; }
+    public String getFullName() { return fullName; }
 
     public void deposit(double amt) {
         balance += amt;
@@ -307,22 +313,7 @@ class Account {
             System.out.println("✅ Withdrawn: " + amt + " | New balance: " + balance);
         }
     }
-
-    // ======= ADD THESE GETTERS =======
-    public String getUsername() {
-        return username;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public String getFullName() {
-        return fullName;
-    }
-    // ================================
 }
-
 
 // ========== ADMIN CLASS ==========
 class Admin {
