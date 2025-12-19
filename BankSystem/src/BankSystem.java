@@ -20,9 +20,9 @@ public class BankSystem {
     static Map<String, Admin> admins = new HashMap<>();
     
     // CSV file path in project root
-    static final String CSV_FILE = "users.csv";
+    static final String CSV_FILE = "currentusers.csv";
 
-    public static void main(String[] args) {
+        public static void main(String[] args) {
 
         // Load users from CSV at startup
         loadUsersFromCSV(CSV_FILE);
@@ -234,28 +234,25 @@ static void loadUsersFromCSV(String fileName) {
         }
     }
 
-    // Save all accounts to CSV (overwrite)
-static void saveNewAccountToCSV(Account acc) {
-    try (PrintWriter pw = new PrintWriter(new FileWriter(CSV_FILE, true))) {
+ // ================= SAVE ALL ACCOUNTS (overwrite) =================
+static void saveAllAccountsToCSV() {
+    try (PrintWriter pw = new PrintWriter(new FileWriter(CSV_FILE))) {
+        // write header
+        pw.println("first_name,last_name,email,balance");
 
-        // Split full name into first and last
-        String[] nameParts = acc.getFullName().split(" ", 2);
-        String firstName = nameParts[0];
-        String lastName = nameParts.length > 1 ? nameParts[1] : "";
+        for (Account acc : accounts.values()) {
+            String[] nameParts = acc.getFullName().split(" ", 2);
+            String firstName = nameParts[0];
+            String lastName = nameParts.length > 1 ? nameParts[1] : "";
+            NumberFormat nf = NumberFormat.getCurrencyInstance(Locale.US);
+            String formattedBalance = nf.format(acc.getBalance());
 
-        // Format balance like "$37,063.78"
-        NumberFormat nf = NumberFormat.getCurrencyInstance(Locale.US);
-        String formattedBalance = nf.format(acc.getBalance());
+            pw.println(firstName + "," + lastName + "," + acc.getUsername() + ",\"" + formattedBalance + "\"");
+        }
 
-        pw.println(
-            firstName + "," +
-            lastName + "," +
-            acc.getUsername() + "," +
-            "\"" + formattedBalance + "\""
-        );
-
+        System.out.println("✅ All accounts saved to CSV.");
     } catch (IOException e) {
-        System.out.println("❌ Error saving new account: " + e.getMessage());
+        System.out.println("❌ Error saving all accounts: " + e.getMessage());
     }
 }
 
